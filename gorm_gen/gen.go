@@ -4,25 +4,28 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gen"
 	"gorm.io/gorm"
+	"time"
 )
 
-//
-//type User struct {
-//	gorm.Model
-//	Id            int64  `json:"id,omitempty"`
-//	FollowCount   int64  `json:"follow_count,omitempty"`
-//	FollowerCount int64  `json:"follower_count,omitempty"`
-//	IsFollow      bool   `json:"is_follow,omitempty"`
-//	Username      string `json:"username"`
-//	Password      string `json:"password"`
-//}
+type User struct {
+	gorm.Model
+	Id            int64  `json:"id,omitempty"`
+	FollowCount   int64  `json:"follow_count,omitempty"`
+	FollowerCount int64  `json:"follower_count,omitempty"`
+	IsFollow      bool   `json:"is_follow,omitempty"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+}
 
-//	type Message struct {
-//		gorm.Model
-//		Id         int64  `json:"id,omitempty"`
-//		Content    string `json:"content,omitempty"`
-//		CreateTime string `json:"create_time,omitempty"`
-//	}
+type Message struct {
+	gorm.Model
+	Id          int64     `json:"id,omitempty"`
+	Content     string    `json:"content,omitempty"`
+	FromUserID  int64     `json:"from_user_id"`
+	ToUserID    int64     `json:"to_user_id"`
+	MessageTime time.Time `json:"column:message_time;default:CURRENT_TIMESTAMP"`
+}
+
 type Video struct {
 	gorm.Model
 	Id            int64  `json:"id,omitempty"`
@@ -33,26 +36,30 @@ type Video struct {
 	CommentCount  int64  `json:"comment_count,omitempty"`
 	Title         string `json:"title"`
 }
+type Favorite struct {
+	gorm.Model
+	Id         int64 `json:"id,omitempty"`
+	UserId     int64 `json:"user_id"` //改过
+	VideoId    int64 `json:"video_id"`
+	ActionType int32 `json:"action_type"`
+}
 
-//
-//type Comment struct {
-//	gorm.Model
-//	Id         int64  `json:"id,omitempty"`
-//	UserId     int64  `json:"user"` //改过
-//	Content    string `json:"content,omitempty"`
-//	CreateDate string `json:"create_date,omitempty"`
-//}
-//type MessageSendEvent struct {
-//	gorm.Model
-//	UserId     int64  `json:"user_id,omitempty"`
-//	ToUserId   int64  `json:"to_user_id,omitempty"`
-//	MsgContent string `json:"msg_content,omitempty"`
-//}
-//type MessagePushEvent struct {
-//	gorm.Model
-//	FromUserId int64  `json:"user_id,omitempty"`
-//	MsgContent string `json:"msg_content,omitempty"`
-//}
+type Comment struct {
+	gorm.Model
+	Id         int64  `json:"id,omitempty"`
+	UserId     int64  `json:"user_id"` //改过
+	Content    string `json:"content,omitempty"`
+	VideoId    int64  `json:"video_id"`
+	CreateDate string `json:"create_date"`
+}
+
+type Follow struct {
+	gorm.Model
+	Id         int64 `json:"id,omitempty"`
+	UserId     int64 `json:"user_id"` //改过
+	ToUserId   int64 `json:"to_user_id"`
+	ActionType int32 `json:"action_type,omitempty"`
+}
 
 // 生成model和query目录的代码。
 func main() {
@@ -69,7 +76,12 @@ func main() {
 	g.UseDB(db)
 	// Generate basic type-safe DAO API
 	// 指定一个表
-	g.ApplyBasic(g.GenerateAllTable()...)
+	user := g.GenerateModel("users")
+	//videos := g.GenerateModel("videos")
+	//comments := g.GenerateModel("comments")
+	follows := g.GenerateModel("follows")
+	//messages := g.GenerateModel("messages")
+	g.ApplyBasic(user, follows)
 	g.Execute()
 }
 
@@ -82,5 +94,5 @@ func main1() {
 		panic("failed to connect database")
 	}
 	// 迁移 schema//
-	db.AutoMigrate(&Video{})
+	db.AutoMigrate(&Follow{})
 }

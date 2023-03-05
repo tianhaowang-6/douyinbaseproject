@@ -106,13 +106,26 @@ func (s *FeedServiceImpl) PublishList(ctx context.Context, req *feed.PublishList
 func (s *FeedServiceImpl) FavoriteAction(ctx context.Context, req *feed.FavoriteActionRequest) (resp *feed.FavoriteActionResponse, err error) {
 	// TODO: Your code here...
 	println("FavoriteAction")
-
-	return
+	code, msg, err := service.FavoriteActionRequestService(ctx, req)
+	response := feed.FavoriteActionResponse{
+		StatusCode: code,
+		StatusMsg:  msg,
+	}
+	return &response, nil
 }
 
 // FavoriteList implements the FeedServiceImpl interface.
 func (s *FeedServiceImpl) FavoriteList(ctx context.Context, req *feed.FavoriteListRequest) (resp *feed.FavoriteListResponse, err error) {
 	// TODO: Your code here...
 	println("FavoriteList")
-	return
+	favoriteList, err := service.FavoriteListService(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	response := feed.FavoriteListResponse{
+		StatusCode: 0,
+		StatusMsg:  nil,
+		VideoList:  favoriteList,
+	}
+	return &response, nil
 }

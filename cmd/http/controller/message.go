@@ -1,12 +1,13 @@
 package controller
 
 import (
+	"context"
+	"douyin/cmd/http/rpc"
+	"douyin/kitex_gen/message"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"sync/atomic"
-	"time"
 )
 
 var tempChat = map[string][]Message{}
@@ -21,44 +22,33 @@ type ChatResponse struct {
 // MessageAction no practical effect, just check if token is valid
 func MessageAction(c *gin.Context) {
 	token := c.Query("token")
-	toUserId := c.Query("to_user_id")
+	toUserId, _ := strconv.ParseInt(c.Query("to_user_id"), 10, 64)
+	actionType, _ := strconv.ParseInt(c.Query("action_type"), 10, 64)
 	content := c.Query("content")
-
-	if user, exist := usersLoginInfo[token]; exist {
-		userIdB, _ := strconv.Atoi(toUserId)
-		chatKey := genChatKey(user.Id, int64(userIdB))
-
-		atomic.AddInt64(&messageIdSequence, 1)
-		curMessage := Message{
-			Id:         messageIdSequence,
-			Content:    content,
-			CreateTime: time.Now().Format(time.Kitchen),
-		}
-
-		if messages, exist := tempChat[chatKey]; exist {
-			tempChat[chatKey] = append(messages, curMessage)
-		} else {
-			tempChat[chatKey] = []Message{curMessage}
-		}
-		c.JSON(http.StatusOK, Response{StatusCode: 0})
-	} else {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+	request := message.RelationActionMessageRequest{
+		Token:      token,
+		ToUserId:   toUserId,
+		ActionType: int32(actionType),
+		Content:    content,
 	}
+	resp, _ := rpc.RelationActionMessage(context.Background(), &request)
+	c.JSON(http.StatusOK, resp)
 }
 
 // MessageChat all users have same follow list
 func MessageChat(c *gin.Context) {
+
 	token := c.Query("token")
-	toUserId := c.Query("to_user_id")
-
-	if user, exist := usersLoginInfo[token]; exist {
-		userIdB, _ := strconv.Atoi(toUserId)
-		chatKey := genChatKey(user.Id, int64(userIdB))
-
-		c.JSON(http.StatusOK, ChatResponse{Response: Response{StatusCode: 0}, MessageList: tempChat[chatKey]})
-	} else {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+	toUserId, _ := strconv.ParseInt(c.Query("to_user_id"), 10, 64)
+	preMsgTime, _ := strconv.ParseInt(c.Query("pre_msg_time"), 10, 64)
+	request := message.MessageChatRequest{
+		Token:      token,
+		ToUserId:   toUserId,
+		PreMsgTime: preMsgTime,
 	}
+	resp, _ := rpc.MessageChat(context.Background(), &request)
+	c.JSON(http.StatusOK, resp)
+
 }
 
 func genChatKey(userIdA int64, userIdB int64) string {

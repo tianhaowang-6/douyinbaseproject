@@ -1,0 +1,5 @@
+package cover
+
+func coverTest() {
+
+}

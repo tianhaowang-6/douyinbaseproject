@@ -6,8 +6,11 @@ import (
 	"douyin/pkg/consts"
 )
 
-func Video(v *model.Video) (feed.Video, error) {
-	video := feed.Video{
+func Video(v *model.Video) (video feed.Video, err error) {
+	if v == nil {
+		return video, err
+	}
+	video = feed.Video{
 		Id:            v.ID,
 		Author:        nil,
 		PlayUrl:       "http://" + consts.WebServerPublicIP + ":" + consts.StaticPort + "/" + v.PlayURL,

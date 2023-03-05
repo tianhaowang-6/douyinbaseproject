@@ -28,10 +28,12 @@ func FavoriteAction(c *gin.Context) {
 
 // FavoriteList all users have same favorite video list
 func FavoriteList(c *gin.Context) {
-	c.JSON(http.StatusOK, VideoListResponse{
-		Response: Response{
-			StatusCode: 0,
-		},
-		VideoList: DemoVideos,
-	})
+	token := c.Query("token")
+	userId, _ := strconv.ParseInt(c.Query("user_id"), 10, 64)
+	request := feed.FavoriteListRequest{
+		UserId: userId,
+		Token:  token,
+	}
+	resp, _ := rpc.FavoriteList(context.Background(), &request)
+	c.JSON(http.StatusOK, resp)
 }
